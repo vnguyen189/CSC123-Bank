@@ -53,7 +53,7 @@ public class UIManager {
 	
 	
 	
-	public  int getMainOption() throws IOException{
+	public int getMainOption() throws IOException{
 		int choice;
 		int menuIndex=1;
 		int totalOptions = menuOptions.length;
@@ -71,17 +71,17 @@ public class UIManager {
 		return choice;
 	}
 
-	public  String readLine(String msg)throws IOException {
+	public String readLine(String msg)throws IOException {
 		print(msg, null);
 		return this.scanner.nextLine();
 	}
 
-	public  String readToken(String msg)throws IOException {
+	public String readToken(String msg)throws IOException {
 		print(msg, null);
 		return this.scanner.next();
 	}
 
-	public  double readDouble(String msg) throws IOException{
+	public double readDouble(String msg) throws IOException{
 
 		while (true) {
 			try {
@@ -93,7 +93,7 @@ public class UIManager {
 
 	}
 
-	public  int readInt(String msg)throws IOException {
+	public int readInt(String msg)throws IOException {
 		while (true) {
 			try {
 				return Integer.parseInt(readToken(msg));
@@ -104,7 +104,7 @@ public class UIManager {
 
 	}
 
-	public  void print(String s, Object[] variables) throws IOException {
+	public void print(String s, Object[] variables) throws IOException {
 		
 		s=String.format(s, variables); 
 		this.out.write(s.getBytes());

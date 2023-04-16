@@ -1,7 +1,10 @@
 package com.usman.csudh.bank;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Scanner;
 
 import com.usman.csudh.bank.core.Account;
 import com.usman.csudh.bank.core.AccountClosedException;
@@ -26,11 +29,19 @@ public class MainBank {
 	public static final String MSG_AMOUNT = "Enter amount: ";
 	public static final String MSG_ACCOUNT_NUMBER = "Enter account number: ";
 	public static final String MSG_ACCOUNT_ACTION = "%n%s was %s, account balance is: %s%n%n";
-	
-
+	public static final String MSG_SELLING_CURRENCY = "The currency you are selling: ";
+	public static final String MSG_AMOUNT_SELLING = "The amount you are selling: ";
+	public static final String MSG_CURRENCY_BUYING = "The currency you are buying: ";
+	public static final String MSG_ACCOUNT_CURRENCY = "Account Currency: ";
+	public static final String MSG_CURRENCY_FILE_ERROR = "**Currency file could not be loaded, Currency Conversion Service and Foreign Currency accounts are not available **";
+	public static final String MSG_CURRENCY_CONVERT_ERROR = "Currency cannot be convert. One of the currency should be USD %n%n";
+	public static final String MSG_CURRENCY_FILE = "exchange-rate.csv";
+	public static final String MSG_EXCHANGE_SUCCESS = "The exchange rate is %s and you will get %s %.2f%n";
+	public static final String MSG_CURRENCY_ERROR = "Exchange rates cannot be found %n%n";
+	public static final String MSG_GOODBYE_EXIT = "Thank you for using this bank application. Goodbye and have a good day!";
 	//Declare main menu and prompt to accept user input
-	public static final String[] menuOptions = { "Open Checking Account%n","Open Saving Account%n", "List Accounts%n","View Statement%n", "Deposit Funds%n", "Withdraw Funds%n",
-			"Close an Account%n", "Exit%n" };
+	public static final String[] menuOptions = { "Open Checking Account%n","Open Saving Account%n", "List Accounts%n","View Statement%n","Account Information%n", "Deposit Funds%n", "Withdraw Funds%n"
+		, "Foreign Exchange%n", "Close an Account%n", "Exit%n" };
 	public static final String MSG_PROMPT = "%nEnter choice: ";
 
 	
@@ -47,7 +58,7 @@ public class MainBank {
 	
 	
 	//Main method. 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 
 		new MainBank(System.in,System.out).run();
 
@@ -55,40 +66,84 @@ public class MainBank {
 	
 	
 	//The core of the program responsible for providing user experience.
-	public void run() {
-
+	public void run() throws FileNotFoundException {
+		
 		Account acc;
 		int option = 0;
 
+		if (Bank.loadCurrencyFile(MSG_CURRENCY_FILE) == false) {
+			System.out.println(MSG_CURRENCY_FILE_ERROR);
+		}
+		
 		UIManager ui = new UIManager(this.in,this.out,menuOptions,MSG_PROMPT);
 		try {
 
 			do {
 				option = ui.getMainOption(); //Render main menu
-
+				
 				switch (option) {
 				case 1:
 					
-					
+					while (Bank.loadCurrencyFile("exchange-rate.csv") == true) {
 					//Compact statement to accept user input, open account, and print the result including the account number
-					ui.print(MSG_ACCOUNT_OPENED,
+						String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
+						
+						while (Bank.lookUpCurrency(currency) == false) {
+							currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
+						}		
+						
+						while (Bank.lookUpCurrency(currency) == true) {
+							ui.print(MSG_ACCOUNT_OPENED,
 							new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 									ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
-									ui.readDouble(MSG_ACCOUNT_OD_LIMIT)).getAccountNumber() });
+									ui.readDouble(MSG_ACCOUNT_OD_LIMIT), currency.toUpperCase()).getAccountNumber() });
+							break;
+						}
+						
 					break;
-				case 2:
+					}
 					
+					while (Bank.loadCurrencyFile("exchange-rate.csv") == false) {
+						ui.print(MSG_ACCOUNT_OPENED,
+								new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
+										ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
+										ui.readDouble(MSG_ACCOUNT_OD_LIMIT), "USD").getAccountNumber() });
+						break;
+						}
+					
+					break;
+					
+				case 2:
+					while (Bank.loadCurrencyFile("exchange-rate.csv") == true) {
 					//Compact statement to accept user input, open account, and print the result including the account number
-					ui.print(MSG_ACCOUNT_OPENED,
+						String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
+						while (Bank.lookUpCurrency(currency) == false) {
+							currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
+						}
+						
+						while (Bank.lookUpCurrency(currency) == true) {
+							ui.print(MSG_ACCOUNT_OPENED,
+								new Object[] { Bank
+										.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
+												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), currency.toUpperCase())
+										.getAccountNumber() }); 
+							break;
+							}
+						
+						break;
+					}
+					while (Bank.loadCurrencyFile("exchange-rate.csv") == false) {
+						ui.print(MSG_ACCOUNT_OPENED,
 							new Object[] { Bank
 									.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
-											ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN))
-									.getAccountNumber() });
+											ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), "USD")
+									.getAccountNumber() }); break;}
+					
 					break;
 
 				case 3:
 					
-					//Get bank to print list of accounts to the output stream provided as method arguemnt
+					//Get bank to print list of accounts to the output stream provided as method argument
 					Bank.listAccounts(this.out);
 					break;
 					
@@ -103,8 +158,22 @@ public class MainBank {
 					}		
 					
 					break;
+					
+					
+				case 5: 
+					try {
+					Bank.printAccountInformation(ui.readInt(MSG_ACCOUNT_NUMBER), this.out);
+					}
+					
+					catch (NoSuchAccountException e1) {
+						this.handleException(ui, e1);
 
-				case 5:
+					}		
+					
+					
+					break;
+
+				case 6:
 					//find account, deposit money and print result
 					
 					try {
@@ -118,7 +187,7 @@ public class MainBank {
 					}
 					break;
 					
-				case 6:
+				case 7:
 					//find account, withdraw money and print result
 					try {
 						int accountNumber=ui.readInt(MSG_ACCOUNT_NUMBER);
@@ -132,7 +201,43 @@ public class MainBank {
 					}
 					break;
 
-				case 7:
+				case 8:
+							
+					String sellingCurrency = ui.readToken(MSG_SELLING_CURRENCY);
+					double amountSelling = ui.readDouble(MSG_AMOUNT_SELLING);
+					String buyingCurrency = ui.readToken(MSG_CURRENCY_BUYING);
+		
+					if (Bank.lookUpCurrency(buyingCurrency) && Bank.lookUpCurrency(sellingCurrency) == true) {
+					
+						if (sellingCurrency.toUpperCase().equals("USD") || buyingCurrency.toUpperCase().equals("USD")) {
+							if(sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == false) {
+							ui.print(MSG_EXCHANGE_SUCCESS,
+								new Object[] { Bank.findCurrencyRate(buyingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(buyingCurrency), amountSelling)});
+					}
+							else if (sellingCurrency.toUpperCase().equals("USD") == false && buyingCurrency.toUpperCase().equals("USD") == true) {
+								ui.print(MSG_EXCHANGE_SUCCESS,
+										new Object[] { Bank.findCurrencyRate(sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(sellingCurrency), amountSelling)});
+							}
+							else if (sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == true) {
+								ui.print(MSG_EXCHANGE_SUCCESS,
+										new Object[] { Bank.findCurrencyRate(sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(sellingCurrency), amountSelling)});
+							}
+						
+						
+						}
+						else if (sellingCurrency.toUpperCase().equals("USD") == false && (buyingCurrency.toUpperCase().equals("USD") == false))  {
+							ui.print(MSG_CURRENCY_CONVERT_ERROR,
+								new Object[] {});
+					}	
+				}
+					else
+						ui.print(MSG_CURRENCY_ERROR,
+								new Object[] {});
+						
+					break;
+					
+					
+				case 9:
 					//find account and close it
 					
 					
@@ -147,9 +252,15 @@ public class MainBank {
 
 					}
 					break;
+					
+					
+				case 10:
+					ui.print(MSG_GOODBYE_EXIT,
+							new Object[] {});
+					System.exit(0);
+					break;
 				
 				}
-
 			} while (option != menuOptions.length);
 
 		} catch (IOException e) {

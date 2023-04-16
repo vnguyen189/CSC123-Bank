@@ -1,4 +1,5 @@
 package com.usman.csudh.bank.core;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -12,13 +13,23 @@ public class Account implements Serializable {
 	private String accountName;
 	private Customer accountHolder;
 	private ArrayList<Transaction> transactions;
+	private String accountCurrency;
+	private double USDcurrency;
 	
+	public double getUSDcurrency(String accountCurrency, double balance) throws FileNotFoundException {
+		if (accountCurrency.equals("USD"))
+			return balance;
+		else
+		return USDcurrency = balance * Bank.findCurrencyRate(accountCurrency);
+	}
+
 	private boolean open=true;
 	private int accountNumber;
 
-	protected Account(String name, Customer customer) {
+	protected Account(String name, Customer customer, String currency) {
 		accountName=name;
 		accountHolder=customer;
+		accountCurrency = currency;
 		transactions=new ArrayList<Transaction>();
 		accountNumber=UniqueCounter.nextValue();
 	}
@@ -29,6 +40,14 @@ public class Account implements Serializable {
 
 	public Customer getAccountHolder() {
 		return accountHolder;
+	}
+
+	public String getAccountCurrency() {
+		return accountCurrency;
+	}
+
+	public void setAccountCurrency(String accountCurrency) {
+		this.accountCurrency = accountCurrency;
 	}
 
 	public double getBalance() {
@@ -79,8 +98,15 @@ public class Account implements Serializable {
 		return accountNumber;
 	}
 
-	public String toString() {
-		String aName=accountNumber+"("+accountName+")"+" : "+accountHolder.toString()+ " : "+getBalance()+" : "+(open?"Account Open":"Account Closed");
+	public String toString()  {
+		String aName = null;
+		try {
+			aName = accountNumber+"("+accountName+")"+" : "+accountHolder.toString()+ " : " + getAccountCurrency().toUpperCase() + " : " +getBalance()+ " : "+ getUSDcurrency(accountCurrency, getBalance()) + " : " + (open?"Account Open":"Account Closed");
+			return aName;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		
+	}
 		return aName;
 	}
 	 
@@ -94,8 +120,22 @@ public class Account implements Serializable {
 			out.write((byte)10);
 		}
 		out.write("------------------\n".getBytes());
-		out.write(("Balance: "+getBalance()+"\n\n\n").getBytes());
+		out.write(("Balance: "+ getAccountCurrency() + " " + getBalance()+"\n\n\n").getBytes());
 		out.flush();
 		
 	}
+public void printInformation(OutputStream out) throws IOException {
+	
+		out.write("\n".getBytes());
+		out.write(("Account Number: " + getAccountNumber() + "\n").getBytes());
+		out.write(("Name: " + accountHolder.getFirstName() + " " + accountHolder.getLastName() + "\n").getBytes());
+		out.write(("SNN: " + accountHolder.getSSN() + "\n").getBytes());
+		out.write(("Currency: " + getAccountCurrency() + "\n").getBytes());
+		out.write(("Currency Balance: " + getAccountCurrency() + " "  + getBalance() + "\n").getBytes());
+		out.write(("USD Balance: USD " + getUSDcurrency(accountCurrency, getBalance()) + "\n").getBytes());
+		out.write("\n".getBytes());
+		out.flush();
+		
+	}
+	
 }
