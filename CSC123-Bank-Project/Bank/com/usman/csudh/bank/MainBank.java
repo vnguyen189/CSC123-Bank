@@ -84,7 +84,7 @@ public class MainBank {
 				switch (option) {
 				case 1:
 					
-					while (Bank.loadCurrencyFile("exchange-rate.csv") == true) {
+					while (Bank.loadCurrencyFile(MSG_CURRENCY_FILE) == true) {
 					//Compact statement to accept user input, open account, and print the result including the account number
 						String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 						
@@ -103,7 +103,7 @@ public class MainBank {
 					break;
 					}
 					
-					while (Bank.loadCurrencyFile("exchange-rate.csv") == false) {
+					while (Bank.loadCurrencyFile(MSG_CURRENCY_FILE) == false) {
 						ui.print(MSG_ACCOUNT_OPENED,
 								new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 										ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
@@ -114,7 +114,7 @@ public class MainBank {
 					break;
 					
 				case 2:
-					while (Bank.loadCurrencyFile("exchange-rate.csv") == true) {
+					while (Bank.loadCurrencyFile(MSG_CURRENCY_FILE) == true) {
 					//Compact statement to accept user input, open account, and print the result including the account number
 						String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 						while (Bank.lookUpCurrency(currency) == false) {
@@ -132,7 +132,7 @@ public class MainBank {
 						
 						break;
 					}
-					while (Bank.loadCurrencyFile("exchange-rate.csv") == false) {
+					while (Bank.loadCurrencyFile(MSG_CURRENCY_FILE) == false) {
 						ui.print(MSG_ACCOUNT_OPENED,
 							new Object[] { Bank
 									.openSavingAccount(ui.readToken(MSG_FIRST_NAME),

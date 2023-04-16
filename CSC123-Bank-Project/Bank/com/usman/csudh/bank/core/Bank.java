@@ -93,7 +93,6 @@ public class Bank {
 	public static double findCurrencyRate (String keyCurrency) throws FileNotFoundException {
 		File file = new File("exchange-rate.csv");
 		Scanner inputFile = new Scanner(file);
-		Scanner input = new Scanner(System.in);
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toUpperCase().contains(keyCurrency.toUpperCase())) {
@@ -108,7 +107,7 @@ public class Bank {
 	public static boolean lookUpCurrency (String keyCurrency) throws FileNotFoundException {
 		File file = new File("exchange-rate.csv");
 		Scanner inputFile = new Scanner(file);
-		Scanner input = new Scanner(System.in);
+
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toUpperCase().contains(keyCurrency.toUpperCase())) 
