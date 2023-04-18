@@ -32,7 +32,7 @@ public class Bank {
 	
 	public static Account lookup(int accountNumber) throws NoSuchAccountException{
 		if(!accounts.containsKey(accountNumber)) {
-			throw new NoSuchAccountException("\nAccount number: "+accountNumber+" nout found!\n\n");
+			throw new NoSuchAccountException("\nAccount number: "+accountNumber+" not found!\n\n");
 		}
 		
 		return accounts.get(accountNumber);
