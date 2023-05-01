@@ -3,6 +3,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Scanner;
@@ -27,8 +31,128 @@ public class Bank {
 		return a;
 		
 	}
-
 	
+	public static boolean loadConfig (String fileName) {
+		File file = new File(fileName);
+		if(!file.exists() || !file.canRead()) 
+			return false;
+		return true;
+	}
+	public static boolean doCurrency (String fileName) throws FileNotFoundException {
+		File file = new File(fileName);
+		Scanner inputFile = new Scanner(file);
+		while (inputFile.hasNext()) {
+			String str = inputFile.nextLine();
+				if (str.toLowerCase().contains("support.currencies")) {
+					String [] splitt = str.split("=");
+					if(splitt[1].equalsIgnoreCase("true")) {
+						return true;
+					}
+				}}
+		return false;
+	}
+	public static boolean currencyFileOrWeb (String fileName) throws FileNotFoundException {
+		File file = new File(fileName);
+		Scanner inputFile = new Scanner(file);
+		while (inputFile.hasNext()) {
+			String str = inputFile.nextLine();
+				if (str.toLowerCase().contains("currencies.source")) {
+					String [] splitt = str.split("=");
+					if(splitt[1].equalsIgnoreCase("file")) 
+						return true;
+					else if (splitt[1].equalsIgnoreCase("webservice"))  
+						return false;
+					
+				}
+				}
+		return false;
+	}
+	public static String webServiceURL (String fileName) throws FileNotFoundException {
+		File file = new File(fileName);
+		Scanner inputFile = new Scanner(file);
+		while (inputFile.hasNext()) {
+			String str = inputFile.nextLine();
+				if (str.toLowerCase().contains("webservice.url")) {
+					String [] splitt = str.split("=");
+					return splitt [1];	
+				}
+				}
+		return null;
+	}
+	
+	public static String currencyFileName (String fileName) throws FileNotFoundException {
+		File file = new File(fileName);
+		Scanner inputFile = new Scanner(file);
+		while (inputFile.hasNext()) {
+			String str = inputFile.nextLine();
+				if (str.toLowerCase().contains("currency.file")) {
+					String [] splitt = str.split("=");
+					return splitt [1];	
+				}
+				}
+		return null;
+	}
+	
+
+	public static boolean canReadFromWeb (String website) throws IOException, InterruptedException {
+		HttpRequest.Builder builder=HttpRequest.newBuilder();
+		builder.uri(URI.create(website));
+		builder.method("GET", HttpRequest.BodyPublishers.noBody());
+
+		HttpRequest req=builder.build();
+		
+		HttpClient client=HttpClient.newHttpClient();
+		
+		HttpResponse<String> response = 
+				client.send(req, HttpResponse.BodyHandlers.ofString());
+	
+		if (response.headers().toString()!=null||response.body()!=null) 
+		return true;
+
+		return false;
+	}
+	
+	public static double fromWebRate (String website, String keyCurrency) throws IOException, InterruptedException {
+		HttpRequest.Builder builder=HttpRequest.newBuilder();
+		builder.uri(URI.create(website));
+		builder.method("GET", HttpRequest.BodyPublishers.noBody());
+
+		HttpRequest req=builder.build();
+		
+		HttpClient client=HttpClient.newHttpClient();
+		
+		HttpResponse<String> response = 
+				client.send(req, HttpResponse.BodyHandlers.ofString());
+		String body = response.body();
+		String [] split1 = body.split("\n");	
+		for (int i = 0; i <= split1.length-1;i++)
+			if (split1[i].toLowerCase().contains(keyCurrency.toLowerCase())) {
+				String [] split2 = split1[i].split(",");
+				if(split2[0].equalsIgnoreCase(keyCurrency))
+				return Double.parseDouble(split2[2]); }
+		
+		return -1;
+	}
+	
+	public static boolean lookUpCurrencyWeb (String website, String keyCurrency) throws IOException, InterruptedException {
+		HttpRequest.Builder builder=HttpRequest.newBuilder();
+		builder.uri(URI.create(website));
+		builder.method("GET", HttpRequest.BodyPublishers.noBody());
+
+		HttpRequest req=builder.build();
+		
+		HttpClient client=HttpClient.newHttpClient();
+		
+		HttpResponse<String> response = 
+				client.send(req, HttpResponse.BodyHandlers.ofString());
+		String body = response.body();
+		String [] split1 = body.split("\n");	
+		for (int i = 0; i <= split1.length-1;i++) {
+			if (split1[i].toLowerCase().contains(keyCurrency.toLowerCase())) 
+				return true;
+		}
+		return false;
+	}
 	
 	public static Account lookup(int accountNumber) throws NoSuchAccountException{
 		if(!accounts.containsKey(accountNumber)) {
