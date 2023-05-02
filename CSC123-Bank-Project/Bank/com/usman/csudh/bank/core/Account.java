@@ -16,11 +16,14 @@ public class Account implements Serializable {
 	private String accountCurrency;
 	private double USDcurrency;
 	
-	public double getUSDcurrency(String accountCurrency, double balance) throws FileNotFoundException {
+	public double getUSDcurrency(String accountCurrency, double balance) throws IOException, InterruptedException {
 		if (accountCurrency.equals("USD"))
 			return balance;
 		else
-		return USDcurrency = balance * Bank.findCurrencyRate(accountCurrency);
+			if(Bank.currencyFileOrWeb("config.txt")==true)
+		return USDcurrency = balance * Bank.findCurrencyRate(Bank.currencyFileName("config.txt"), accountCurrency);
+			else
+		return USDcurrency = balance * Bank.fromWebRate(Bank.webServiceURL("config.txt"), accountCurrency);
 	}
 
 	private boolean open=true;
@@ -105,8 +108,13 @@ public class Account implements Serializable {
 			return aName;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		
 	}
+		catch (InterruptedException a) {
+			a.printStackTrace();
+		}
+		catch (IOException b) {
+			b.printStackTrace();
+		}
 		return aName;
 	}
 	 
@@ -124,7 +132,7 @@ public class Account implements Serializable {
 		out.flush();
 		
 	}
-public void printInformation(OutputStream out) throws IOException {
+public void printInformation(OutputStream out) throws IOException, InterruptedException {
 	
 		out.write("\n".getBytes());
 		out.write(("Account Number: " + getAccountNumber() + "\n").getBytes());

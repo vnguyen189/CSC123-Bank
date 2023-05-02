@@ -125,10 +125,9 @@ public class Bank {
 				client.send(req, HttpResponse.BodyHandlers.ofString());
 		String body = response.body();
 		String [] split1 = body.split("\n");	
-		for (int i = 0; i <= split1.length-1;i++)
-			if (split1[i].toLowerCase().contains(keyCurrency.toLowerCase())) {
-				String [] split2 = split1[i].split(",");
-				if(split2[0].equalsIgnoreCase(keyCurrency))
+		for (int i = 0; i <= split1.length-1;i++) {
+			String split2 [] = split1[i].split(",");
+			if ((split2[0].equalsIgnoreCase(keyCurrency))) 
 				return Double.parseDouble(split2[2]); }
 		
 		return -1;
@@ -148,7 +147,8 @@ public class Bank {
 		String body = response.body();
 		String [] split1 = body.split("\n");	
 		for (int i = 0; i <= split1.length-1;i++) {
-			if (split1[i].toLowerCase().contains(keyCurrency.toLowerCase())) 
+			String split2 [] = split1[i].split(",");
+			if ((split2[0].equalsIgnoreCase(keyCurrency))) 
 				return true;
 		}
 		return false;
@@ -200,7 +200,7 @@ public class Bank {
 		lookup(accountNumber).printTransactions(out);
 	}
 	
-	public static void printAccountInformation(int accountNumber, OutputStream out) throws IOException,NoSuchAccountException{
+	public static void printAccountInformation(int accountNumber, OutputStream out) throws IOException,NoSuchAccountException, InterruptedException{
 		
 		lookup(accountNumber).printInformation(out);
 	}
@@ -214,13 +214,13 @@ public class Bank {
 		return true;
 	}
 	
-	public static double findCurrencyRate (String keyCurrency) throws FileNotFoundException {
-		File file = new File("exchange-rate.csv");
+	public static double findCurrencyRate (String fileName, String keyCurrency) throws FileNotFoundException {
+		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
-				if (str.toUpperCase().contains(keyCurrency.toUpperCase())) {
-					String [] splitt = str.split(",");	
+			String [] splitt = str.split(",");
+		if (splitt[0].equalsIgnoreCase(keyCurrency)) {
 					double rate = Double.parseDouble(splitt[2]);
 					return rate;
 				}
@@ -228,15 +228,16 @@ public class Bank {
 		return 0;
 	}
 	
-	public static boolean lookUpCurrency (String keyCurrency) throws FileNotFoundException {
-		File file = new File("exchange-rate.csv");
+	public static boolean lookUpCurrency (String fileName, String keyCurrency) throws FileNotFoundException {
+		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
-				if (str.toUpperCase().contains(keyCurrency.toUpperCase())) 
+			String [] splitt = str.split(",");
+		if (splitt[0].equalsIgnoreCase(keyCurrency))  
 					return true;
-				}
+		}
 		return false;
 	}
 	
