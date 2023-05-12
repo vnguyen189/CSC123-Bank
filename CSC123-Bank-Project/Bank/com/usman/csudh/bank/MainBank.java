@@ -113,6 +113,7 @@ public class MainBank {
 			//I also tried to load the currency file and then store into ArrayList so that it only loads once, but I wasn't able to do so.
 			//Choices with currency will take 10 seconds to load to next part.
 			//I actually tried to load currency file with a test class with one load, and it still slow as well.
+			//The slowness is only when using webservice as source of currency file. 
 			do {
 				option = ui.getMainOption(); //Render main menu
 				
