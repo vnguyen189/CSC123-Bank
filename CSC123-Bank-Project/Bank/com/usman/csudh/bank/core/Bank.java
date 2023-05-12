@@ -15,7 +15,34 @@ import java.util.TreeMap;
 public class Bank {
 	
 	private static Map<Integer,Account> accounts=new TreeMap<Integer,Account>();
+	private static boolean doCurrencies;
+	private static String fileOrWeb; 
+	private static String FileName;
+	private static String webAddress;
+	private static boolean canReadWeb;
+	private static boolean canLoadFile;
 	
+	
+	public static String getFileOrWeb() {
+		return fileOrWeb;
+	}
+
+	public static String getFileName() {
+		return FileName;
+	}
+
+	public static String getWebAddress() {
+		return webAddress;
+	}
+
+	public static boolean isCanReadWeb() {
+		return canReadWeb;
+	}
+
+	public static boolean isCanLoadFile() {
+		return canLoadFile;
+	}
+
 	public static Account openCheckingAccount(String firstName, String lastName, String ssn, double overdraftLimit, String currency) {
 		Customer c=new Customer(firstName,lastName, ssn);
 		Account a=new CheckingAccount(c,overdraftLimit, currency);
@@ -38,20 +65,27 @@ public class Bank {
 			return false;
 		return true;
 	}
-	public static boolean doCurrency (String fileName) throws FileNotFoundException {
+	public static void doCurrency (String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("support.currencies")) {
 					String [] splitt = str.split("=");
-					if(splitt[1].equalsIgnoreCase("true")) {
-						return true;
-					}
+					if(splitt[1].equalsIgnoreCase("true")) 
+						doCurrencies=true;
+					else 
+						doCurrencies=false;
+
 				}}
-		return false;
+		
 	}
-	public static boolean currencyFileOrWeb (String fileName) throws FileNotFoundException {
+	
+	public static boolean supportCurrencies() {
+		return doCurrencies;
+	}
+	
+	public static void currencyFileOrWeb (String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 		while (inputFile.hasNext()) {
@@ -59,42 +93,40 @@ public class Bank {
 				if (str.toLowerCase().contains("currencies.source")) {
 					String [] splitt = str.split("=");
 					if(splitt[1].equalsIgnoreCase("file")) 
-						return true;
+						fileOrWeb = "file";
 					else if (splitt[1].equalsIgnoreCase("webservice"))  
-						return false;
-					
+						fileOrWeb = "webservice";	
 				}
-				}
-		return false;
+			}
+		
 	}
-	public static String webServiceURL (String fileName) throws FileNotFoundException {
+	public static void webServiceURL (String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("webservice.url")) {
 					String [] splitt = str.split("=");
-					return splitt [1];	
+					webAddress = splitt [1];	
 				}
-				}
-		return null;
+			}
+	
 	}
 	
-	public static String currencyFileName (String fileName) throws FileNotFoundException {
+	public static void currencyFileName (String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
 		Scanner inputFile = new Scanner(file);
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("currency.file")) {
 					String [] splitt = str.split("=");
-					return splitt [1];	
+					FileName = splitt [1];	
 				}
 				}
-		return null;
 	}
 	
 
-	public static boolean canReadFromWeb (String website) throws IOException, InterruptedException {
+	public static void canReadFromWeb (String website) throws IOException, InterruptedException {
 		HttpRequest.Builder builder=HttpRequest.newBuilder();
 		builder.uri(URI.create(website));
 		builder.method("GET", HttpRequest.BodyPublishers.noBody());
@@ -107,52 +139,47 @@ public class Bank {
 				client.send(req, HttpResponse.BodyHandlers.ofString());
 	
 		if (response.headers().toString()!=null||response.body()!=null) 
-		return true;
-
-		return false;
+		canReadWeb = true;
+		else
+		canReadWeb = false;
 	}
 	
-	public static double fromWebRate (String website, String keyCurrency) throws IOException, InterruptedException {
-		HttpRequest.Builder builder=HttpRequest.newBuilder();
-		builder.uri(URI.create(website));
-		builder.method("GET", HttpRequest.BodyPublishers.noBody());
-
-		HttpRequest req=builder.build();
-		
-		HttpClient client=HttpClient.newHttpClient();
-		
-		HttpResponse<String> response = 
-				client.send(req, HttpResponse.BodyHandlers.ofString());
-		String body = response.body();
-		String [] split1 = body.split("\n");	
-		for (int i = 0; i <= split1.length-1;i++) {
-			String split2 [] = split1[i].split(",");
-			if ((split2[0].equalsIgnoreCase(keyCurrency))) 
-				return Double.parseDouble(split2[2]); }
-		
-		return -1;
-	}
+	/*
+	 * public static double fromWebRate (String website, String keyCurrency) throws
+	 * IOException, InterruptedException { HttpRequest.Builder
+	 * builder=HttpRequest.newBuilder(); builder.uri(URI.create(website));
+	 * builder.method("GET", HttpRequest.BodyPublishers.noBody());
+	 * 
+	 * HttpRequest req=builder.build();
+	 * 
+	 * HttpClient client=HttpClient.newHttpClient();
+	 * 
+	 * HttpResponse<String> response = client.send(req,
+	 * HttpResponse.BodyHandlers.ofString()); String body = response.body(); String
+	 * [] split1 = body.split("\n"); for (int i = 0; i <= split1.length-1;i++) {
+	 * String split2 [] = split1[i].split(","); if
+	 * ((split2[0].equalsIgnoreCase(keyCurrency))) return
+	 * Double.parseDouble(split2[2]); }
+	 * 
+	 * return -1; }
+	 */
 	
-	public static boolean lookUpCurrencyWeb (String website, String keyCurrency) throws IOException, InterruptedException {
-		HttpRequest.Builder builder=HttpRequest.newBuilder();
-		builder.uri(URI.create(website));
-		builder.method("GET", HttpRequest.BodyPublishers.noBody());
-
-		HttpRequest req=builder.build();
-		
-		HttpClient client=HttpClient.newHttpClient();
-		
-		HttpResponse<String> response = 
-				client.send(req, HttpResponse.BodyHandlers.ofString());
-		String body = response.body();
-		String [] split1 = body.split("\n");	
-		for (int i = 0; i <= split1.length-1;i++) {
-			String split2 [] = split1[i].split(",");
-			if ((split2[0].equalsIgnoreCase(keyCurrency))) 
-				return true;
-		}
-		return false;
-	}
+	/*
+	 * public static boolean lookUpCurrencyWeb (String website, String keyCurrency)
+	 * throws IOException, InterruptedException { HttpRequest.Builder
+	 * builder=HttpRequest.newBuilder(); builder.uri(URI.create(website));
+	 * builder.method("GET", HttpRequest.BodyPublishers.noBody());
+	 * 
+	 * HttpRequest req=builder.build();
+	 * 
+	 * HttpClient client=HttpClient.newHttpClient();
+	 * 
+	 * HttpResponse<String> response = client.send(req,
+	 * HttpResponse.BodyHandlers.ofString()); String body = response.body(); String
+	 * [] split1 = body.split("\n"); for (int i = 0; i <= split1.length-1;i++) {
+	 * String split2 [] = split1[i].split(","); if
+	 * ((split2[0].equalsIgnoreCase(keyCurrency))) return true; } return false; }
+	 */
 	
 	public static Account lookup(int accountNumber) throws NoSuchAccountException{
 		if(!accounts.containsKey(accountNumber)) {
@@ -200,46 +227,61 @@ public class Bank {
 		lookup(accountNumber).printTransactions(out);
 	}
 	
-	public static void printAccountInformation(int accountNumber, OutputStream out) throws IOException,NoSuchAccountException, InterruptedException{
+	public static void printAccountInformation(int accountNumber, OutputStream out) throws Exception{
 		
 		lookup(accountNumber).printInformation(out);
 	}
 	
 				
-	public static boolean loadCurrencyFile (String fileName) throws FileNotFoundException {
+	public static void loadCurrencyFile (String fileName) throws FileNotFoundException {
 		File file = new File(fileName);
-		if(!file.exists() || !file.canRead() ) 
-			return false;
-	
-		return true;
+		if(!file.exists() || !file.canRead()) 
+			canLoadFile = false;
+		else
+			canLoadFile = true;
 	}
 	
-	public static double findCurrencyRate (String fileName, String keyCurrency) throws FileNotFoundException {
-		File file = new File(fileName);
-		Scanner inputFile = new Scanner(file);
-		while (inputFile.hasNext()) {
-			String str = inputFile.nextLine();
-			String [] splitt = str.split(",");
+	/*
+	 * public static double findCurrencyRate (String fileName, String keyCurrency)
+	 * throws FileNotFoundException { File file = new File(fileName); Scanner
+	 * inputFile = new Scanner(file); while (inputFile.hasNext()) { String str =
+	 * inputFile.nextLine(); String [] splitt = str.split(","); if
+	 * (splitt[0].equalsIgnoreCase(keyCurrency)) { double rate =
+	 * Double.parseDouble(splitt[2]); return rate; } } return 0; }
+	 */
+	
+	public static double findCurrencyRate (String type, String typePath, String keyCurrency) throws Exception {
+		CurrencyReader r=CurrencyReader.getInstance(type, typePath);
+		for(String line:r.readCurrencies()) {
+			String [] splitt = line.split(",");
 		if (splitt[0].equalsIgnoreCase(keyCurrency)) {
 					double rate = Double.parseDouble(splitt[2]);
 					return rate;
 				}
 		}
-		return 0;
+		return -1;
 	}
 	
-	public static boolean lookUpCurrency (String fileName, String keyCurrency) throws FileNotFoundException {
-		File file = new File(fileName);
-		Scanner inputFile = new Scanner(file);
-
-		while (inputFile.hasNext()) {
-			String str = inputFile.nextLine();
-			String [] splitt = str.split(",");
-		if (splitt[0].equalsIgnoreCase(keyCurrency))  
+	public static boolean lookUpCurrency (String type, String typePath, String keyCurrency) throws Exception {
+		CurrencyReader r=CurrencyReader.getInstance(type, typePath);
+		for(String line:r.readCurrencies()) {
+			String [] splitt = line.split(",");
+		if (splitt[0].equalsIgnoreCase(keyCurrency)) {
 					return true;
+				}
 		}
 		return false;
 	}
+	
+	/*
+	 * public static boolean lookUpCurrency (String fileName, String keyCurrency)
+	 * throws FileNotFoundException { File file = new File(fileName); Scanner
+	 * inputFile = new Scanner(file);
+	 * 
+	 * while (inputFile.hasNext()) { String str = inputFile.nextLine(); String []
+	 * splitt = str.split(","); if (splitt[0].equalsIgnoreCase(keyCurrency)) return
+	 * true; } return false; }
+	 */
 	
 	public static double convertingCurrency (String buyCurrency, String sellCurrency, double currencyRate, double convertAmount) {
 		double convertedCurrency = 0;

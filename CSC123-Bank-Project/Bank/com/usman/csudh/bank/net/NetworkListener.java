@@ -10,7 +10,7 @@ import com.usman.csudh.bank.MainBank;
 
 public class NetworkListener {
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 		ServerSocket server=new ServerSocket(80);
 		while(true) {
 			Socket sock =server.accept();

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import com.usman.csudh.bank.MainBank;
 import com.usman.csudh.util.UniqueCounter;
 
 public class Account implements Serializable {
@@ -16,14 +17,16 @@ public class Account implements Serializable {
 	private String accountCurrency;
 	private double USDcurrency;
 	
-	public double getUSDcurrency(String accountCurrency, double balance) throws IOException, InterruptedException {
+	public double getUSDcurrency(String accountCurrency, double balance) throws Exception {
 		if (accountCurrency.equals("USD"))
 			return balance;
-		else
-			if(Bank.currencyFileOrWeb("config.txt")==true)
-		return USDcurrency = balance * Bank.findCurrencyRate(Bank.currencyFileName("config.txt"), accountCurrency);
-			else
-		return USDcurrency = balance * Bank.fromWebRate(Bank.webServiceURL("config.txt"), accountCurrency);
+		else {
+			if(Bank.getFileOrWeb().equalsIgnoreCase("file"))
+		return USDcurrency = balance * Bank.findCurrencyRate("file", Bank.getFileName(), accountCurrency);
+			else if (Bank.getFileOrWeb().equalsIgnoreCase("webservice"))
+		return USDcurrency = balance * Bank.findCurrencyRate("http", Bank.getWebAddress(), accountCurrency);
+	}
+		return -1;
 	}
 
 	private boolean open=true;
@@ -114,6 +117,9 @@ public class Account implements Serializable {
 		}
 		catch (IOException b) {
 			b.printStackTrace();
+		} catch (Exception d) {
+			// TODO Auto-generated catch block
+			d.printStackTrace();
 		}
 		return aName;
 	}
@@ -132,7 +138,7 @@ public class Account implements Serializable {
 		out.flush();
 		
 	}
-public void printInformation(OutputStream out) throws IOException, InterruptedException {
+public void printInformation(OutputStream out) throws Exception {
 	
 		out.write("\n".getBytes());
 		out.write(("Account Number: " + getAccountNumber() + "\n").getBytes());

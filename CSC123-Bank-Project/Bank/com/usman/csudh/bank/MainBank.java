@@ -43,6 +43,10 @@ public class MainBank {
 	public static final String MSG_WEBSITE_ERROR = "Website have problems. Cannot load currency";
 	public static final String MSG_CONFIG_FILE = "config.txt";
 	public static final String MSG_NO_CURRENCY = "\nCurrency not configured\n\n";
+	public static final String MSG_FILE = "file";
+	public static final String MSG_HTTP = "http";
+	public static final String MSG_WEBSERVICE = "webservice";
+	public static final String MSG_USD = "USD";
 	//Declare main menu and prompt to accept user input
 	public static final String[] menuOptions = { "Open Checking Account%n","Open Saving Account%n", "List Accounts%n","View Statement%n","Account Information%n", "Deposit Funds%n", "Withdraw Funds%n"
 		, "Foreign Exchange%n", "Close an Account%n", "Exit%n" };
@@ -62,7 +66,7 @@ public class MainBank {
 	
 	
 	//Main method. 
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) throws Exception {
 
 		new MainBank(System.in,System.out).run();
 
@@ -70,7 +74,7 @@ public class MainBank {
 	
 	
 	//The core of the program responsible for providing user experience.
-	public void run() throws InterruptedException, IOException {
+	public void run() throws Exception {
 		
 		Account acc;
 		int option = 0;
@@ -78,40 +82,55 @@ public class MainBank {
 		if (Bank.loadConfig(MSG_CONFIG_FILE)==false) {
 			System.exit(0);
 		}
-		
-		if (Bank.doCurrency(MSG_CONFIG_FILE)==true) {
-		if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)==true) {
-			if (Bank.loadCurrencyFile(Bank.currencyFileName(MSG_CONFIG_FILE)) == false) {
+		else {
+		Bank.doCurrency(MSG_CONFIG_FILE);
+		if (Bank.supportCurrencies()==true) {
+		Bank.currencyFileOrWeb(MSG_CONFIG_FILE);
+		if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
+		Bank.currencyFileName(MSG_CONFIG_FILE);
+		Bank.loadCurrencyFile(Bank.getFileName());
+			if (Bank.isCanLoadFile() == false) {
 				System.out.println(MSG_CURRENCY_FILE_ERROR);
-			}}
-		else if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)== false) {
-			if (Bank.canReadFromWeb(Bank.webServiceURL(MSG_CONFIG_FILE)) == false) {
+			}
+			else 
+				Bank.currencyFileName(MSG_CONFIG_FILE);
+			}
+		else if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
+			Bank.webServiceURL(MSG_CONFIG_FILE);
+			Bank.canReadFromWeb(Bank.getWebAddress());
+			if (Bank.isCanReadWeb() == false) 
 				System.out.println(MSG_WEBSITE_ERROR);
 		}
+		
 		}
+		
 		}
+		
+	
 	
 		UIManager ui = new UIManager(this.in,this.out,menuOptions,MSG_PROMPT);
 		try {
-
+			//I also tried to load the currency file and then store into ArrayList so that it only loads once, but I wasn't able to do so.
+			//Choices with currency will take 10 seconds to load to next part.
+			//I actually tried to load currency file with a test class with one load, and it still slow as well.
 			do {
 				option = ui.getMainOption(); //Render main menu
 				
 				switch (option) {
 				case 1:
 					
-					while (Bank.doCurrency(MSG_CONFIG_FILE)==true) {
-						while (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)==true) {
+					while (Bank.supportCurrencies()==true) {
+						while (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
 							
-							while (Bank.loadCurrencyFile(Bank.currencyFileName(MSG_CONFIG_FILE)) == true) {
+							while (Bank.isCanLoadFile() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 									
-									while (Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), currency) == false) {
+									while (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), currency) == false) {
 										currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
 									}		
 									
-									while (Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), currency) == true) {
+									while (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), currency) == true) {
 										ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
@@ -121,25 +140,25 @@ public class MainBank {
 									
 								break;
 								}
-							while (Bank.loadCurrencyFile(Bank.currencyFileName(MSG_CONFIG_FILE)) == false) {
+							while (Bank.isCanLoadFile() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
-												ui.readDouble(MSG_ACCOUNT_OD_LIMIT), "USD").getAccountNumber() });
+												ui.readDouble(MSG_ACCOUNT_OD_LIMIT), MSG_USD).getAccountNumber() });
 								break;
 								}
 							break;
 							}
-						while (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)== false) {
-							while (Bank.canReadFromWeb(Bank.webServiceURL(MSG_CONFIG_FILE)) == true) {
+						while (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
+							while (Bank.isCanReadWeb() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 									
-									while (Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), currency) == false) {
+									while (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), currency) == false) {
 										currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
 									}		
 									
-									while (Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), currency) == true) {
+									while (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), currency) == true) {
 										ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
@@ -149,11 +168,11 @@ public class MainBank {
 									
 								break;
 								}
-							while (Bank.canReadFromWeb(Bank.webServiceURL(MSG_CONFIG_FILE)) == false) {
+							while (Bank.isCanReadWeb() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
-												ui.readDouble(MSG_ACCOUNT_OD_LIMIT), "USD").getAccountNumber() });
+												ui.readDouble(MSG_ACCOUNT_OD_LIMIT), MSG_USD).getAccountNumber() });
 								break;
 								}
 							break;
@@ -162,27 +181,27 @@ public class MainBank {
 						} 
 					
 					
-					while (Bank.doCurrency(MSG_CONFIG_FILE)==false) {
+					while (Bank.supportCurrencies()==false) {
 						ui.print(MSG_ACCOUNT_OPENED,
 								new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 										ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
-										ui.readDouble(MSG_ACCOUNT_OD_LIMIT), "USD").getAccountNumber() });
+										ui.readDouble(MSG_ACCOUNT_OD_LIMIT), MSG_USD).getAccountNumber() });
 						break;
 						}
 					
 					break;
 					
 				case 2:
-					while (Bank.doCurrency(MSG_CONFIG_FILE)==true) {
-						if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)==true) {
-							while (Bank.loadCurrencyFile(Bank.currencyFileName(MSG_CONFIG_FILE)) == true) {
+					while (Bank.supportCurrencies()==true) {
+						if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
+							while (Bank.isCanLoadFile() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
-									while (Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), currency) == false) {
+									while (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), currency) == false) {
 										currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
 									}
 									
-									while (Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), currency) == true) {
+									while (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), currency) == true) {
 										ui.print(MSG_ACCOUNT_OPENED,
 											new Object[] { Bank
 													.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
@@ -193,24 +212,24 @@ public class MainBank {
 									
 									break;
 								}
-								while (Bank.loadCurrencyFile(Bank.currencyFileName(MSG_CONFIG_FILE)) == false) {
+								while (Bank.isCanLoadFile() == false) {
 									ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank
 												.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
-														ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), "USD")
+														ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), MSG_USD)
 												.getAccountNumber() }); break;}
 							
 						}
-					else if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)== false) {
+					else if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
 							
-						while (Bank.canReadFromWeb(Bank.webServiceURL(MSG_CONFIG_FILE)) == true) {
+						while (Bank.isCanReadWeb() == true) {
 							//Compact statement to accept user input, open account, and print the result including the account number
 								String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
-								while (Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), currency) == false) {
+								while (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), currency) == false) {
 									currency = ui.readToken(MSG_ACCOUNT_CURRENCY).toUpperCase();
 								}
 								
-								while (Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), currency) == true) {
+								while (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), currency) == true) {
 									ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank
 												.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
@@ -221,11 +240,11 @@ public class MainBank {
 								
 								break;
 							}
-							while (Bank.canReadFromWeb(Bank.webServiceURL(MSG_CONFIG_FILE)) == false) {
+							while (Bank.isCanReadWeb() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 									new Object[] { Bank
 											.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
-													ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), "USD")
+													ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), MSG_USD)
 											.getAccountNumber() }); break;}
 							
 							break;
@@ -235,11 +254,11 @@ public class MainBank {
 					}
 					
 					
-					while (Bank.doCurrency(MSG_CONFIG_FILE)==false) {
+					while (Bank.supportCurrencies()==false) {
 						ui.print(MSG_ACCOUNT_OPENED,
 								new Object[] { Bank
 										.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
-												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), "USD")
+												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN), MSG_USD)
 										.getAccountNumber() });
 						break;
 					}
@@ -309,31 +328,31 @@ public class MainBank {
 				case 8:
 							
 					
-					if (Bank.doCurrency(MSG_CONFIG_FILE)==true) {
+					if (Bank.supportCurrencies()==true) {
 						String sellingCurrency = ui.readToken(MSG_SELLING_CURRENCY);
 						double amountSelling = ui.readDouble(MSG_AMOUNT_SELLING);
 						String buyingCurrency = ui.readToken(MSG_CURRENCY_BUYING);
 			
-						if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)==true) {
-							if (Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), buyingCurrency) == true && Bank.lookUpCurrency(Bank.currencyFileName(MSG_CONFIG_FILE), sellingCurrency) == true) {
+						if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
+							if (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), buyingCurrency) == true && Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), sellingCurrency) == true) {
 								
-								if (sellingCurrency.toUpperCase().equals("USD") || buyingCurrency.toUpperCase().equals("USD")) {
-									if(sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == false) {
+								if (sellingCurrency.toUpperCase().equals(MSG_USD) || buyingCurrency.toUpperCase().equals(MSG_USD)) {
+									if(sellingCurrency.toUpperCase().equals(MSG_USD) == true && buyingCurrency.toUpperCase().equals(MSG_USD) == false) {
 									ui.print(MSG_EXCHANGE_SUCCESS,
-										new Object[] { Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), buyingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), buyingCurrency), amountSelling)});
+										new Object[] { Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), buyingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), buyingCurrency), amountSelling)});
 							}
-									else if (sellingCurrency.toUpperCase().equals("USD") == false && buyingCurrency.toUpperCase().equals("USD") == true) {
+									else if (sellingCurrency.toUpperCase().equals(MSG_USD) == false && buyingCurrency.toUpperCase().equals(MSG_USD) == true) {
 										ui.print(MSG_EXCHANGE_SUCCESS,
-												new Object[] { Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), sellingCurrency), amountSelling)});
+												new Object[] { Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), sellingCurrency), amountSelling)});
 									}
-									else if (sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == true) {
+									else if (sellingCurrency.toUpperCase().equals(MSG_USD) == true && buyingCurrency.toUpperCase().equals(MSG_USD) == true) {
 										ui.print(MSG_EXCHANGE_SUCCESS,
-												new Object[] { Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(Bank.currencyFileName(MSG_CONFIG_FILE), sellingCurrency), amountSelling)});
+												new Object[] { Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_FILE, Bank.getFileName(), sellingCurrency), amountSelling)});
 									}
 								
 								
 								}
-								else if (sellingCurrency.toUpperCase().equals("USD") == false && (buyingCurrency.toUpperCase().equals("USD") == false))  {
+								else if (sellingCurrency.toUpperCase().equals(MSG_USD) == false && (buyingCurrency.toUpperCase().equals(MSG_USD) == false))  {
 									ui.print(MSG_CURRENCY_CONVERT_ERROR,
 										new Object[] {});
 							}	
@@ -342,26 +361,26 @@ public class MainBank {
 								ui.print(MSG_CURRENCY_ERROR,
 										new Object[] {});
 						}
-						else if (Bank.currencyFileOrWeb(MSG_CONFIG_FILE)==false) {
-							if (Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), buyingCurrency) == true && Bank.lookUpCurrencyWeb(Bank.webServiceURL(MSG_CONFIG_FILE), sellingCurrency) == true) {
+						else if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
+							if (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), buyingCurrency) == true && Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), sellingCurrency) == true) {
 								
-								if (sellingCurrency.toUpperCase().equals("USD") || buyingCurrency.toUpperCase().equals("USD")) {
-									if(sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == false) {
+								if (sellingCurrency.toUpperCase().equals(MSG_USD) || buyingCurrency.toUpperCase().equals(MSG_USD)) {
+									if(sellingCurrency.toUpperCase().equals(MSG_USD) == true && buyingCurrency.toUpperCase().equals(MSG_USD) == false) {
 									ui.print(MSG_EXCHANGE_SUCCESS,
-										new Object[] { Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), buyingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), buyingCurrency), amountSelling)});
+										new Object[] { Bank.findCurrencyRate(MSG_HTTP,Bank.getWebAddress(), buyingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_HTTP, Bank.getWebAddress(), buyingCurrency), amountSelling)});
 							}
-									else if (sellingCurrency.toUpperCase().equals("USD") == false && buyingCurrency.toUpperCase().equals("USD") == true) {
+									else if (sellingCurrency.toUpperCase().equals(MSG_USD) == false && buyingCurrency.toUpperCase().equals(MSG_USD) == true) {
 										ui.print(MSG_EXCHANGE_SUCCESS,
-												new Object[] { Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), sellingCurrency), amountSelling)});
+												new Object[] { Bank.findCurrencyRate(MSG_HTTP, Bank.getWebAddress(), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_HTTP, Bank.getWebAddress(), sellingCurrency), amountSelling)});
 									}
-									else if (sellingCurrency.toUpperCase().equals("USD") == true && buyingCurrency.toUpperCase().equals("USD") == true) {
+									else if (sellingCurrency.toUpperCase().equals(MSG_USD) == true && buyingCurrency.toUpperCase().equals(MSG_USD) == true) {
 										ui.print(MSG_EXCHANGE_SUCCESS,
-												new Object[] { Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.fromWebRate(Bank.webServiceURL(MSG_CONFIG_FILE), sellingCurrency), amountSelling)});
+												new Object[] { Bank.findCurrencyRate(MSG_HTTP, Bank.getWebAddress(), sellingCurrency), buyingCurrency.toUpperCase(), Bank.convertingCurrency(buyingCurrency, sellingCurrency, Bank.findCurrencyRate(MSG_HTTP, Bank.getWebAddress(), sellingCurrency), amountSelling)});
 									}
 								
 								
 								}
-								else if (sellingCurrency.toUpperCase().equals("USD") == false && (buyingCurrency.toUpperCase().equals("USD") == false))  {
+								else if (sellingCurrency.toUpperCase().equals(MSG_USD) == false && (buyingCurrency.toUpperCase().equals(MSG_USD) == false))  {
 									ui.print(MSG_CURRENCY_CONVERT_ERROR,
 										new Object[] {});
 							}	
@@ -372,7 +391,7 @@ public class MainBank {
 						}
 						
 					}
-					else if (Bank.doCurrency(MSG_CONFIG_FILE)==false) {
+					else if (Bank.supportCurrencies()==false) {
 					
 						ui.print(MSG_NO_CURRENCY,
 								new Object[] {});
