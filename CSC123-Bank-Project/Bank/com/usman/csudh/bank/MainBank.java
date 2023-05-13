@@ -437,6 +437,9 @@ public class MainBank {
 		catch (InterruptedException a) {
 			a.printStackTrace();
 		}
+		catch (Exception b) {
+			b.printStackTrace();
+		}
 		
 	}
 
