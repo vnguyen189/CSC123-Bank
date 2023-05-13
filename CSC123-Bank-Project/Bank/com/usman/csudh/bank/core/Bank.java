@@ -35,11 +35,11 @@ public class Bank {
 		return webAddress;
 	}
 
-	public static boolean isCanReadWeb() {
+	public static boolean canReadWeb() {
 		return canReadWeb;
 	}
 
-	public static boolean isCanLoadFile() {
+	public static boolean canLoadFile() {
 		return canLoadFile;
 	}
 
@@ -71,8 +71,8 @@ public class Bank {
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("support.currencies")) {
-					String [] splitt = str.split("=");
-					if(splitt[1].equalsIgnoreCase("true")) 
+					String [] split = str.split("=");
+					if(split[1].equalsIgnoreCase("true")) 
 						doCurrencies=true;
 					else 
 						doCurrencies=false;
@@ -106,8 +106,8 @@ public class Bank {
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("webservice.url")) {
-					String [] splitt = str.split("=");
-					webAddress = splitt [1];	
+					String [] split = str.split("=");
+					webAddress = split [1];	
 				}
 			}
 	
@@ -119,8 +119,8 @@ public class Bank {
 		while (inputFile.hasNext()) {
 			String str = inputFile.nextLine();
 				if (str.toLowerCase().contains("currency.file")) {
-					String [] splitt = str.split("=");
-					FileName = splitt [1];	
+					String [] split = str.split("=");
+					FileName = split [1];	
 				}
 				}
 	}
@@ -253,9 +253,9 @@ public class Bank {
 	public static double findCurrencyRate (String type, String typePath, String keyCurrency) throws Exception {
 		CurrencyReader r=CurrencyReader.getInstance(type, typePath);
 		for(String line:r.readCurrencies()) {
-			String [] splitt = line.split(",");
-		if (splitt[0].equalsIgnoreCase(keyCurrency)) {
-					double rate = Double.parseDouble(splitt[2]);
+			String [] split = line.split(",");
+		if (split[0].equalsIgnoreCase(keyCurrency)) {
+					double rate = Double.parseDouble(split[2]);
 					return rate;
 				}
 		}
@@ -265,8 +265,8 @@ public class Bank {
 	public static boolean lookUpCurrency (String type, String typePath, String keyCurrency) throws Exception {
 		CurrencyReader r=CurrencyReader.getInstance(type, typePath);
 		for(String line:r.readCurrencies()) {
-			String [] splitt = line.split(",");
-		if (splitt[0].equalsIgnoreCase(keyCurrency)) {
+			String [] split = line.split(",");
+		if (split[0].equalsIgnoreCase(keyCurrency)) {
 					return true;
 				}
 		}

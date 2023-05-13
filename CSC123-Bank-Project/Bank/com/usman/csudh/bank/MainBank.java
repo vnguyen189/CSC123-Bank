@@ -89,7 +89,7 @@ public class MainBank {
 		if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
 		Bank.currencyFileName(MSG_CONFIG_FILE);
 		Bank.loadCurrencyFile(Bank.getFileName());
-			if (Bank.isCanLoadFile() == false) {
+			if (Bank.canLoadFile() == false) {
 				System.out.println(MSG_CURRENCY_FILE_ERROR);
 			}
 			else 
@@ -98,7 +98,7 @@ public class MainBank {
 		else if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
 			Bank.webServiceURL(MSG_CONFIG_FILE);
 			Bank.canReadFromWeb(Bank.getWebAddress());
-			if (Bank.isCanReadWeb() == false) 
+			if (Bank.canReadWeb() == false) 
 				System.out.println(MSG_WEBSITE_ERROR);
 		}
 		
@@ -123,7 +123,7 @@ public class MainBank {
 					while (Bank.supportCurrencies()==true) {
 						while (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
 							
-							while (Bank.isCanLoadFile() == true) {
+							while (Bank.canLoadFile() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 									
@@ -141,7 +141,7 @@ public class MainBank {
 									
 								break;
 								}
-							while (Bank.isCanLoadFile() == false) {
+							while (Bank.canLoadFile() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
@@ -151,7 +151,7 @@ public class MainBank {
 							break;
 							}
 						while (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
-							while (Bank.isCanReadWeb() == true) {
+							while (Bank.canReadWeb() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 									
@@ -169,7 +169,7 @@ public class MainBank {
 									
 								break;
 								}
-							while (Bank.isCanReadWeb() == false) {
+							while (Bank.canReadWeb() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank.openCheckingAccount(ui.readToken(MSG_FIRST_NAME),
 												ui.readToken(MSG_LAST_NAME), ui.readToken(MSG_SSN),
@@ -195,7 +195,7 @@ public class MainBank {
 				case 2:
 					while (Bank.supportCurrencies()==true) {
 						if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_FILE)) {
-							while (Bank.isCanLoadFile() == true) {
+							while (Bank.canLoadFile() == true) {
 								//Compact statement to accept user input, open account, and print the result including the account number
 									String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 									while (Bank.lookUpCurrency(MSG_FILE, Bank.getFileName(), currency) == false) {
@@ -213,7 +213,7 @@ public class MainBank {
 									
 									break;
 								}
-								while (Bank.isCanLoadFile() == false) {
+								while (Bank.canLoadFile() == false) {
 									ui.print(MSG_ACCOUNT_OPENED,
 										new Object[] { Bank
 												.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
@@ -223,7 +223,7 @@ public class MainBank {
 						}
 					else if (Bank.getFileOrWeb().equalsIgnoreCase(MSG_WEBSERVICE)) {
 							
-						while (Bank.isCanReadWeb() == true) {
+						while (Bank.canReadWeb() == true) {
 							//Compact statement to accept user input, open account, and print the result including the account number
 								String currency = ui.readToken(MSG_ACCOUNT_CURRENCY);
 								while (Bank.lookUpCurrency(MSG_HTTP, Bank.getWebAddress(), currency) == false) {
@@ -241,7 +241,7 @@ public class MainBank {
 								
 								break;
 							}
-							while (Bank.isCanReadWeb() == false) {
+							while (Bank.canReadWeb() == false) {
 								ui.print(MSG_ACCOUNT_OPENED,
 									new Object[] { Bank
 											.openSavingAccount(ui.readToken(MSG_FIRST_NAME),
